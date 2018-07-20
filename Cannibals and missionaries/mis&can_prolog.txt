@@ -1,0 +1,99 @@
+% Представляем состояние как [CL,ML,B,CR,MR]
+start([3,3,left,0,0]).
+goal([0,0,right,3,3]).
+
+legal(CL,ML,CR,MR) :-
+	% проверка возможен ли переход
+	ML>=0, CL>=0, MR>=0, CR>=0,
+	(ML>=CL ; ML=0),
+	(MR>=CR ; MR=0).
+
+% Possible moves:
+
+move([CL,ML,left,CR,MR],[CL2,ML2,right,CR2,MR2]):-
+	%  один миссионер и один канибал слева направо
+	CR2 is CR+1,
+	CL2 is CL-1,
+	MR2 is MR+1,
+	ML2 is ML-1,
+	legal(CL2,ML2,CR2,MR2).
+
+move([CL,ML,left,CR,MR],[CL,ML2,right,CR,MR2]):-
+	% 2 миссионера слева направо
+	MR2 is MR+2,
+	ML2 is ML-2,
+	legal(CL,ML2,CR,MR2).
+
+move([CL,ML,left,CR,MR],[CL2,ML,right,CR2,MR]):-
+	% 2 канибалла слева направо
+	CR2 is CR+2,
+	CL2 is CL-2,
+	legal(CL2,ML,CR2,MR).
+
+move([CL,ML,left,CR,MR],[CL,ML2,right,CR,MR2]):-
+	% 1 миссионер слева направо
+	MR2 is MR+1,
+	ML2 is ML-1,
+	legal(CL,ML2,CR,MR2).
+
+move([CL,ML,left,CR,MR],[CL2,ML,right,CR2,MR]):-
+	% 1 канибал слева направо
+	CR2 is CR+1,
+	CL2 is CL-1,
+	legal(CL2,ML,CR2,MR).
+
+move([CL,ML,right,CR,MR],[CL2,ML,left,CR2,MR]):-
+	% 2 канибалла справа налево
+	CR2 is CR-2,
+	CL2 is CL+2,
+	legal(CL2,ML,CR2,MR).
+
+move([CL,ML,right,CR,MR],[CL,ML2,left,CR,MR2]):-
+	% 2 миссионера справа налево
+	MR2 is MR-2,
+	ML2 is ML+2,
+	legal(CL,ML2,CR,MR2).
+
+move([CL,ML,right,CR,MR],[CL2,ML2,left,CR2,MR2]):-
+	%  1 миссионер и 1 канибал перемещается справа налево
+	CR2 is CR-1,
+	CL2 is CL+1,
+	MR2 is MR-1,
+	ML2 is ML+1,
+	legal(CL2,ML2,CR2,MR2).
+
+move([CL,ML,right,CR,MR],[CL2,ML,left,CR2,MR]):-
+	% один каннибал перемещается с права налево
+	CR2 is CR-1,
+	CL2 is CL+1,
+	legal(CL2,ML,CR2,MR).
+
+move([CL,ML,right,CR,MR],[CL,ML2,left,CR,MR2]):-
+	% Один миссионер перемещается с права налево
+	MR2 is MR-1,
+	ML2 is ML+1,
+	legal(CL,ML2,CR,MR2).
+
+% Рекурсивно вызываем функцию для нахождения решения
+path([CL1,ML1,B1,CR1,MR1],[CL2,ML2,B2,CR2,MR2],Been_list,MovesList) :- 
+   move([CL1,ML1,B1,CR1,MR1],[CL3,ML3,B3,CR3,MR3]), 
+   not(member([CL3,ML3,B3,CR3,MR3],Been_list)),
+   path( [CL3,ML3,B3,CR3,MR3],
+        [CL2,ML2,B2,CR2,MR2],
+        [  [CL3,ML3,B3,CR3,MR3] | Been_list  ],
+        [  [ [CL3,ML3,B3,CR3,MR3], [CL1,ML1,B1,CR1,MR1] ]  |  MovesList  ] ).
+
+% Когда нашли решение
+path([CL,ML,B,CR,MR],[CL,ML,B,CR,MR],_,MovesList):- 
+	writelist(MovesList).
+
+% Вывод
+writelist([]) :- write(' Ходы: '), nl. 
+writelist([[A,B]|MovesList]) :- 
+	writelist(MovesList), 
+   	write(B), write(' -> '), write(A), nl.
+
+
+% Находим решение для задачи переправки каннибалов и миссионеров
+test :- 
+   path([3,3,left,0,0],[0,0,right,3,3],[[3,3,left,0,0]],_).
